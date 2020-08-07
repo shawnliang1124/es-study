@@ -1,0 +1,59 @@
+/*
+ * Licensed to Elasticsearch under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+apply plugin: 'elasticsearch.testclusters'
+apply plugin: 'elasticsearch.esplugin'
+
+esplugin {
+  name 'security-authorization-engine'
+  description 'An example spi extension plugin for security that implements an Authorization Engine'
+  classname 'org.elasticsearch.example.AuthorizationEnginePlugin'
+  extendedPlugins = ['x-pack-security']
+  licenseFile rootProject.file('licenses/APACHE-LICENSE-2.0.txt')
+  noticeFile rootProject.file('NOTICE.txt')
+}
+
+dependencies {
+  compileOnly "org.elasticsearch.plugin:x-pack-core:${versions.elasticsearch}"
+  testCompile "org.elasticsearch.client:x-pack-transport:${versions.elasticsearch}"
+}
+
+integTest {
+  dependsOn buildZip
+  runner {
+    systemProperty 'tests.security.manager', 'false'
+  }
+}
+
+testClusters.integTest {
+  setting 'xpack.security.enabled', 'true'
+  setting 'xpack.ilm.enabled', 'false'
+  setting 'xpack.ml.enabled', 'false'
+  setting 'xpack.monitoring.enabled', 'false'
+  setting 'xpack.license.self_generated.type', 'trial'
+
+  // This is important, so that all the modules are available too.
+  // There are index templates that use token filters that are in analysis-module and
+  // processors are being used that are in ingest-common module.
+  distribution = 'default'
+
+  user role: 'custom_superuser'
+}
+
+check.dependsOn integTest

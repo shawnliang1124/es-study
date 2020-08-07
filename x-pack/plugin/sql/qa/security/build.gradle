@@ -1,0 +1,70 @@
+dependencies {
+  testCompile project(':x-pack:plugin:core')
+}
+
+Project mainProject = project
+
+group = "${group}.x-pack.qa.sql.security"
+
+/*
+ * Licensed to Elasticsearch under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// Tests are pushed down to subprojects and will be checked there.
+testingConventions.enabled = false
+
+subprojects {
+  // Use resources from the parent project in subprojects
+  sourceSets {
+    test {
+      mainProject.sourceSets.test.output.classesDirs.each { dir ->
+        output.addClassesDir { dir }
+        output.builtBy(mainProject.tasks.testClasses)
+      }
+      runtimeClasspath += mainProject.sourceSets.test.output
+    }
+  }
+
+  processTestResources {
+    from mainProject.file('src/test/resources')
+  }
+
+  dependencies {
+    testCompile project(":x-pack:plugin:core")
+  }
+
+  testClusters.integTest {
+    distribution = "DEFAULT"
+    // Setup auditing so we can use it in some tests
+    setting 'xpack.security.audit.enabled', 'true'
+    setting 'xpack.security.enabled', 'true'
+    setting 'xpack.license.self_generated.type', 'trial'
+    // Setup roles used by tests
+    extraConfigFile 'roles.yml', mainProject.file('roles.yml')
+    /* Setup the one admin user that we run the tests as.
+     * Tests use "run as" to get different users. */
+    user username: "test_admin", password: "x-pack-test-password"
+  }
+
+  integTest.runner {
+    nonInputProperties.systemProperty 'tests.audit.logfile',
+        "${ -> testClusters.integTest.singleNode().getAuditLog()}"
+    nonInputProperties.systemProperty 'tests.audit.yesterday.logfile',
+        "${ -> testClusters.integTest.singleNode().getAuditLog().getParentFile()}/integTest_audit-${new Date().format('yyyy-MM-dd')}.json"
+  }
+}

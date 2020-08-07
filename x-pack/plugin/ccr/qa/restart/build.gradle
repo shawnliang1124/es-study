@@ -1,0 +1,75 @@
+/*
+ * Licensed to Elasticsearch under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+import org.elasticsearch.gradle.test.RestIntegTestTask
+
+apply plugin: 'elasticsearch.testclusters'
+apply plugin: 'elasticsearch.standalone-test'
+
+dependencies {
+    testCompile project(':x-pack:plugin:ccr:qa')
+}
+
+task 'leader-cluster'(type: RestIntegTestTask) {
+    mustRunAfter(precommit)
+    runner {
+        systemProperty 'tests.target_cluster', 'leader'
+    }
+}
+testClusters.'leader-cluster' {
+    distribution = "DEFAULT"
+    setting 'xpack.license.self_generated.type', 'trial'
+}
+
+task 'follow-cluster'(type: RestIntegTestTask) {
+    dependsOn 'leader-cluster'
+    useCluster testClusters.'leader-cluster'
+    runner {
+        systemProperty 'tests.target_cluster', 'follow'
+        nonInputProperties.systemProperty 'tests.leader_host',
+                "${-> testClusters.'leader-cluster'.getAllHttpSocketURI().get(0)}"
+    }
+}
+testClusters.'follow-cluster' {
+    distribution = "DEFAULT"
+    setting 'xpack.monitoring.collection.enabled', 'true'
+    setting 'xpack.license.self_generated.type', 'trial'
+    setting 'cluster.remote.leader_cluster.seeds',
+            { "\"${testClusters.'leader-cluster'.getAllTransportPortURI().get(0)}\"" }
+    nameCustomization = { 'follow'  }
+}
+
+task followClusterRestartTest(type: Test) {
+    dependsOn tasks.'follow-cluster'
+    useCluster testClusters.'leader-cluster'
+    useCluster testClusters.'follow-cluster'
+
+    maxParallelForks = 1
+    systemProperty 'tests.rest.load_packaged', 'false'
+    systemProperty 'tests.target_cluster', 'follow-restart'
+    doFirst {
+        testClusters.'follow-cluster'.restart()
+        nonInputProperties.systemProperty 'tests.leader_host', "${-> testClusters.'leader-cluster'.getAllHttpSocketURI().get(0)}"
+        nonInputProperties.systemProperty 'tests.rest.cluster', "${-> testClusters.'follow-cluster'.getAllHttpSocketURI().join(",")}"
+    }
+    outputs.doNotCacheIf "Caching of REST tests not implemented yet", { false }
+}
+
+check.dependsOn followClusterRestartTest
+test.enabled = false

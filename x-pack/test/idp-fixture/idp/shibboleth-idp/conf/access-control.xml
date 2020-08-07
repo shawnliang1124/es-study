@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to Elasticsearch under one or more contributor
+  ~ license agreements. See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright
+  ~ ownership. Elasticsearch licenses this file to you under
+  ~ the Apache License, Version 2.0 (the "License"); you may
+  ~ not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+    <!--
+    Map of access control policies used to limit access to administrative functions.
+    The purpose of the map is to label policies with a key/name so they can be reused.
+    -->
+
+    <!--
+    Use the "shibboleth.IPRangeAccessControl" parent bean for IP-based access control.
+    The ranges provided MUST be CIDR network expressions. To specify a single address,
+    add "/32" or "/128" for IPv4 or IPv6 respectively.
+
+    The additional examples below demonstrate how to control access by username
+    and by attribute(s), in the case of authenticated access to admin functions.
+    -->
+
+    <util:map id="shibboleth.AccessControlPolicies">
+
+        <entry key="AccessByIPAddress">
+            <bean id="AccessByIPAddress" parent="shibboleth.IPRangeAccessControl"
+                p:allowedRanges="#{ {'127.0.0.1/32', '::1/128'} }" />
+        </entry>
+
+        <!--
+        <entry key="AccessByUser">
+            <bean parent="shibboleth.PredicateAccessControl">
+                <constructor-arg>
+                    <bean parent="shibboleth.Conditions.SubjectName" c:collection="#{'jdoe'}" />
+                </constructor-arg>
+            </bean>
+        </entry>
+        -->
+
+        <!--
+        <entry key="AccessByAttribute">
+            <bean parent="shibboleth.PredicateAccessControl">
+                <constructor-arg>
+                    <bean class="net.shibboleth.idp.profile.logic.SimpleAttributePredicate">
+                        <property name="attributeValueMap">
+                            <map>
+                                <entry key="eduPersonEntitlement">
+                                    <list>
+                                        <value>https://example.org/entitlement/idpadmin</value>
+                                    </list>
+                                </entry>
+                            </map>
+                        </property>
+                    </bean>
+                </constructor-arg>
+            </bean>
+        </entry>
+        -->
+
+    </util:map>
+
+</beans>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to Elasticsearch under one or more contributor
+  ~ license agreements. See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright
+  ~ ownership. Elasticsearch licenses this file to you under
+  ~ the Apache License, Version 2.0 (the "License"); you may
+  ~ not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+    <!-- First priority is given to any subjectAltNames specified (emailAddress is 1) -->
+    <util:list id="shibboleth.c14n.x500.SubjectAltNameTypes">
+        <!-- <value>1</value> -->
+    </util:list>
+
+    <!-- Second priority is a list of Certificate Subject RDN OIDs to look for. -->
+    <util:list id="shibboleth.c14n.x500.ObjectIDs">
+        <value>2.5.4.3</value>
+    </util:list>
+
+    <!-- Simple transforms to apply to username after authentication. -->
+    <util:constant id="shibboleth.c14n.x500.Lowercase" static-field="java.lang.Boolean.FALSE"/>
+    <util:constant id="shibboleth.c14n.x500.Uppercase" static-field="java.lang.Boolean.FALSE"/>
+    <util:constant id="shibboleth.c14n.x500.Trim" static-field="java.lang.Boolean.TRUE"/>
+
+    <!-- Apply any regular expression replacement pairs after authentication. -->
+    <util:list id="shibboleth.c14n.x500.Transforms">
+        <!--
+        <bean parent="shibboleth.Pair" p:first="^(.+)@example\.edu$" p:second="$1" />
+        -->
+    </util:list>
+
+</beans>

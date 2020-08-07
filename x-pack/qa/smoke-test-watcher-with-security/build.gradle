@@ -1,0 +1,53 @@
+apply plugin: 'elasticsearch.testclusters'
+apply plugin: 'elasticsearch.standalone-rest-test'
+apply plugin: 'elasticsearch.rest-test'
+
+dependencies {
+  testCompile project(':x-pack:qa')
+}
+
+/*
+ * Licensed to Elasticsearch under one or more contributor
+ * license agreements. See the NOTICE file distributed with
+ * this work for additional information regarding copyright
+ * ownership. Elasticsearch licenses this file to you under
+ * the Apache License, Version 2.0 (the "License"); you may
+ * not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
+// bring in watcher rest test suite
+task copyWatcherRestTests(type: Copy) {
+  into project.sourceSets.test.output.resourcesDir
+  from project(xpackProject('plugin').path).sourceSets.test.resources.srcDirs
+  include 'rest-api-spec/test/watcher/**'
+}
+
+integTest.runner.dependsOn copyWatcherRestTests
+testClusters.integTest {
+  distribution = "DEFAULT"
+  setting 'xpack.ilm.enabled', 'false'
+  setting 'xpack.monitoring.enabled', 'false'
+  setting 'xpack.ml.enabled', 'false'
+  setting 'xpack.security.enabled', 'true'
+  // settings to test settings filtering on
+  setting 'xpack.notification.email.account._email.smtp.host', 'host.domain'
+  setting 'xpack.notification.email.account._email.smtp.port', '587'
+  setting 'xpack.notification.email.account._email.smtp.user', '_user'
+  keystore  'xpack.notification.email.account._email.smtp.secure_password', '_passwd'
+  setting 'xpack.license.self_generated.type', 'trial'
+  extraConfigFile 'roles.yml', file('roles.yml')
+  user username: "test_admin", password: "x-pack-test-password"
+  user username: "x_pack_rest_user", password: "x-pack-test-password", role: "watcher_manager"
+  user username: "watcher_manager", password: "x-pack-test-password", role: "watcher_manager"
+  user username: "powerless_user", password: "x-pack-test-password", role: "crappy_role"
+}

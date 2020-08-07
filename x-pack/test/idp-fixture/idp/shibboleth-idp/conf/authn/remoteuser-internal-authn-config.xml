@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Licensed to Elasticsearch under one or more contributor
+  ~ license agreements. See the NOTICE file distributed with
+  ~ this work for additional information regarding copyright
+  ~ ownership. Elasticsearch licenses this file to you under
+  ~ the Apache License, Version 2.0 (the "License"); you may
+  ~ not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing,
+  ~ software distributed under the License is distributed on an
+  ~ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  ~ KIND, either express or implied.  See the License for the
+  ~ specific language governing permissions and limitations
+  ~ under the License.
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:c="http://www.springframework.org/schema/c"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+                           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+                           http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd"
+
+       default-init-method="initialize"
+       default-destroy-method="destroy">
+
+    <!-- Check getRemoteUser() for identity (the typical case). -->
+    <util:constant id="shibboleth.authn.RemoteUser.checkRemoteUser" static-field="java.lang.Boolean.TRUE"/>
+
+    <!-- Populate one or both of the lists below to define HTTP headers or Servlet Attributes to check. -->
+
+    <util:list id="shibboleth.authn.RemoteUser.checkHeaders">
+        <!--
+        <value>User-Identity</value>
+        -->
+    </util:list>
+
+    <util:list id="shibboleth.authn.RemoteUser.checkAttributes">
+        <!--
+        <value>User-Identity</value>
+        -->
+    </util:list>
+
+    <!-- Simple transforms to apply to username before validation. -->
+    <util:constant id="shibboleth.authn.RemoteUser.Lowercase" static-field="java.lang.Boolean.FALSE"/>
+    <util:constant id="shibboleth.authn.RemoteUser.Uppercase" static-field="java.lang.Boolean.FALSE"/>
+    <util:constant id="shibboleth.authn.RemoteUser.Trim" static-field="java.lang.Boolean.TRUE"/>
+
+    <!-- Apply any regular expression replacement pairs before validation. -->
+    <util:list id="shibboleth.authn.RemoteUser.Transforms">
+        <!--
+        <bean parent="shibboleth.Pair" p:first="^(.+)@example\.edu$" p:second="$1" />
+        -->
+    </util:list>
+
+    <!-- Uncomment/configure to install username whitelist, blacklist, and/or match expressions. -->
+
+    <util:list id="shibboleth.authn.RemoteUser.whitelistedUsernames">
+        <!--
+        <value>goodguy</value>
+        -->
+    </util:list>
+
+    <util:list id="shibboleth.authn.RemoteUser.blacklistedUsernames">
+        <!--
+        <value>badguy</value>
+        -->
+    </util:list>
+
+    <!--
+    <bean id="shibboleth.authn.RemoteUser.matchExpression" class="java.util.regex.Pattern" factory-method="compile"
+        c:_0="^(.+)@example\.edu]$" />
+    -->
+
+</beans>
